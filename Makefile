@@ -29,7 +29,8 @@ SOURCES = \
     Source/Kernel/Src/semaphore.c \
     Source/Port/STM32/port.c \
     Source/Port/STM32/startup.c \
-    Source/App/main.c
+    Source/App/main.c \
+    Source/App/task1/testcase1.c
 
 # Object files
 OBJECTS = $(SOURCES:%.c=$(BUILD_DIR)/%.o)

@@ -27,6 +27,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/Source/Kernel/Inc
     ${CMAKE_SOURCE_DIR}/Source/Port/STM32
     ${CMAKE_SOURCE_DIR}/Source/App
+    ${CMAKE_SOURCE_DIR}/Source/App/task1
 )
 
 # Kernel sources
@@ -46,6 +47,7 @@ set(PORT_SOURCES
 # App sources
 set(APP_SOURCES
     Source/App/main.c
+    Source/App/task1/testcase1.c
 )
 
 # Create executable
