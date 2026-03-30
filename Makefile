@@ -28,6 +28,9 @@ SOURCES = \
     Source/Kernel/Src/timer.c \
     Source/Kernel/Src/semaphore.c \
     Source/Port/STM32/port.c \
+    Source/Port/STM32/rcc.c \
+    Source/Port/STM32/gpio.c \
+    Source/Port/STM32/systick.c \
     Source/Port/STM32/startup.c \
     Source/App/main.c \
     Source/App/task1/testcase1.c

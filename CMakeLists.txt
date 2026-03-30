@@ -20,17 +20,25 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -O2")
 # Linker flags
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -mcpu=${CPU} -mthumb")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections -Wl,--print-memory-usage")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -specs=nano.specs -specs=nosys.specs")
 
 # Include directories
+# Kernel (hardware independent)
 include_directories(
     ${CMAKE_SOURCE_DIR}/Source/Kernel/Inc
+)
+# Port (hardware dependent)
+include_directories(
     ${CMAKE_SOURCE_DIR}/Source/Port/STM32
+)
+# App
+include_directories(
     ${CMAKE_SOURCE_DIR}/Source/App
     ${CMAKE_SOURCE_DIR}/Source/App/task1
 )
 
-# Kernel sources
+# =============================================================================
+# Kernel sources (ANSI C - hardware independent)
+# =============================================================================
 set(KERNEL_SOURCES
     Source/Kernel/Src/list.c
     Source/Kernel/Src/task.c
@@ -38,13 +46,20 @@ set(KERNEL_SOURCES
     Source/Kernel/Src/semaphore.c
 )
 
-# Port sources
+# =============================================================================
+# Port sources (STM32F1 hardware dependent)
+# =============================================================================
 set(PORT_SOURCES
     Source/Port/STM32/port.c
+    Source/Port/STM32/rcc.c
+    Source/Port/STM32/gpio.c
+    Source/Port/STM32/systick.c
     Source/Port/STM32/startup.c
 )
 
+# =============================================================================
 # App sources
+# =============================================================================
 set(APP_SOURCES
     Source/App/main.c
     Source/App/task1/testcase1.c

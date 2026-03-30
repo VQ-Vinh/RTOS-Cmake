@@ -26,10 +26,10 @@ extern void led2Toggle(void);    // PA2
 // Toggle occurs every Period/2 milliseconds
 // Example: 500ms period = 250ms ON + 250ms OFF
 // =============================================================================
-#define LED_PC13_PERIOD 500   // PC13: 500ms cycle = 250ms toggle
-#define LED_PA0_PERIOD  1000  // PA0:  1000ms cycle = 500ms toggle
-#define LED_PA1_PERIOD  1500  // PA1:  1500ms cycle = 750ms toggle
-#define LED_PA2_PERIOD  2500  // PA2:  2500ms cycle = 1250ms toggle
+#define LED_PC13_PERIOD 200   // PC13: 500ms cycle = 250ms toggle
+#define LED_PA0_PERIOD  500  // PA0:  1000ms cycle = 500ms toggle
+#define LED_PA1_PERIOD  1000  // PA1:  1500ms cycle = 750ms toggle
+#define LED_PA2_PERIOD  1500  // PA2:  2500ms cycle = 1250ms toggle
 
 // =============================================================================
 // LED Blink Counters

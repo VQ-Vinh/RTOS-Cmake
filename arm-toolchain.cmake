@@ -25,7 +25,6 @@ set(CMAKE_C_FLAGS_INIT "${CMAKE_C_FLAGS_INIT} -fno-exceptions -fno-unwind-tables
 
 # Linker flags
 set(CMAKE_EXE_LINKER_FLAGS_INIT "-Wl,--gc-sections -Wl,--print-memory-usage")
-set(CMAKE_EXE_LINKER_FLAGS_INIT "${CMAKE_EXE_LINKER_FLAGS_INIT} -specs=nano.specs -specs=nosys.specs")
 
 # No operating system
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

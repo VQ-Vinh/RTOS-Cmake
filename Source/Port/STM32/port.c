@@ -1,132 +1,52 @@
 /**
  * @file port.c
- * @brief STM32F103 hardware abstraction layer
+ * @brief RTOS Port Implementation for STM32F1 (ARM Cortex-M3)
  *
- * Provides low-level peripheral access for:
- * - GPIO (PA0, PA1, PA2, PC13)
- * - SysTick timer (1ms system tick)
- * - System clock configuration
+ * This file provides hardware-specific implementations for the RTOS.
+ * Uses driver layer (rcc, gpio, systick) for hardware access.
  */
 
 #include <stdint.h>
+#include "port.h"
+#include "rcc.h"
+#include "gpio.h"
+#include "systick.h"
 #include "task.h"
 #include "timer.h"
 
-// =============================================================================
-// Base Addresses
-// =============================================================================
-#define RCC_BASE        0x40021000  // Reset & Clock Control
-#define GPIOA_BASE      0x40010800  // GPIO Port A
-#define GPIOC_BASE      0x40011000  // GPIO Port C
-#define SysTick_BASE    0xE000E010  // System Timer
-
-// =============================================================================
-// RCC Registers (Reset & Clock Control)
-// =============================================================================
-#define RCC_CR          (*(volatile uint32_t *)(RCC_BASE + 0x00))  // Control Register
-#define RCC_CFGR        (*(volatile uint32_t *)(RCC_BASE + 0x04))  // Clock Configuration
-#define RCC_APB2ENR     (*(volatile uint32_t *)(RCC_BASE + 0x18))  // APB2 Peripheral Clock Enable
-
-// =============================================================================
-// GPIOA Registers (Port A)
-// =============================================================================
-// CRL: Control register low (pins 0-7)
-// ODR: Output data register
-#define GPIOA_CRL       (*(volatile uint32_t *)(GPIOA_BASE + 0x00))
-#define GPIOA_ODR       (*(volatile uint32_t *)(GPIOA_BASE + 0x0C))
-
-// =============================================================================
-// GPIOC Registers (Port C)
-// =============================================================================
-// CRH: Control register high (pins 8-15)
-// ODR: Output data register
-// IDR: Input data register
-#define GPIOC_CRH       (*(volatile uint32_t *)(GPIOC_BASE + 0x04))
-#define GPIOC_ODR       (*(volatile uint32_t *)(GPIOC_BASE + 0x0C))
-#define GPIOC_IDR       (*(volatile uint32_t *)(GPIOC_BASE + 0x08))
-
-// =============================================================================
-// SysTick Registers (System Timer)
-// =============================================================================
-// CTRL: Control & Status register
-// LOAD: Reload value register
-// VAL: Current value register
-#define SysTick_CTRL    (*(volatile uint32_t *)(SysTick_BASE + 0x00))
-#define SysTick_LOAD    (*(volatile uint32_t *)(SysTick_BASE + 0x04))
-#define SysTick_VAL     (*(volatile uint32_t *)(SysTick_BASE + 0x08))
-
-// =============================================================================
-// System Clock Configuration
-// =============================================================================
-// Using HSI (Internal High-Speed Oscillator) at 8MHz
-// Note: PLL configuration not included - would require external crystal for 72MHz
-#define SystemCoreClock 8000000   // 8MHz HSI clock
-#define SysTick_Frequency 1000    // Target: 1ms (1000Hz) tick
-
-// Declare LED control callback from main.c
-extern void ledControlCallback(void);
-
+/* System tick counter */
 volatile uint32_t systemTick = 0;
 
 /**
  * @brief Initialize system hardware
  *
  * Configuration steps:
- * 1. Enable clock for GPIOA and GPIOC peripherals
- * 2. Configure PA0, PA1, PA2 as push-pull output (50MHz)
- * 3. Configure PC13 as push-pull output (50MHz)
- * 4. Initialize all LEDs to OFF state (active-low LEDs)
- *
- * Note: System runs on HSI (8MHz) - no PLL
+ * 1. Initialize GPIO pins (PA0, PA1, PA2, PC13)
+ * 2. Initialize all LEDs to OFF state (active-low)
  */
 void systemInit(void) {
-    // Enable GPIOA and GPIOC peripheral clocks
-    // Bit 2: IOPAEN (GPIOA clock enable)
-    // Bit 4: IOPCEN (GPIOC clock enable)
-    RCC_APB2ENR |= (1 << 2);
-    RCC_APB2ENR |= (1 << 4);
+    // Configure GPIO pins as output 50MHz push-pull
+    // PA0, PA1, PA2
+    gpioInitPin(GPIO_PORT_A, 0, GPIO_MODE_OUTPUT_50MHZ, GPIO_CNF_PUSHPULL);
+    gpioInitPin(GPIO_PORT_A, 1, GPIO_MODE_OUTPUT_50MHZ, GPIO_CNF_PUSHPULL);
+    gpioInitPin(GPIO_PORT_A, 2, GPIO_MODE_OUTPUT_50MHZ, GPIO_CNF_PUSHPULL);
+    // PC13
+    gpioInitPin(GPIO_PORT_C, 13, GPIO_MODE_OUTPUT_50MHZ, GPIO_CNF_PUSHPULL);
 
-    // Configure PA0, PA1, PA2 as general purpose output
-    // Each pin needs 4 bits: CNF(2 bits) + MODE(2 bits)
-    // 0x3 in MODE = 50MHz, 0x0 in CNF = push-pull
-    // Format: [CNF1:MODE1][CNF0:MODE0] for each pin
-    GPIOA_CRL &= ~(0xFFF);     // Clear bits for PA0, PA1, PA2
-    GPIOA_CRL |= (0x333);      // Set: MODE=50MHz, CNF=push-pull
-
-    // Configure PC13 as general purpose output (on GPIOC port)
-    // PC13 is controlled by bits 20-23 in CRH (pin 13)
-    // Same configuration: 50MHz push-pull
-    GPIOC_CRH &= ~(0xF << 20); // Clear CNF/MODE bits for PC13
-    GPIOC_CRH |= (0x3 << 20);  // Set MODE=50MHz, CNF=push-pull
-
-    // Initialize LED state: all OFF (active-low means high=off)
-    // PA0, PA1, PA2: set bits high to turn LEDs off
-    GPIOA_ODR |= 0x07;
-    // PC13: set bit high to turn LED off
-    GPIOC_ODR |= (1 << 13);
+    // Initialize LED state: all OFF (active-low = high)
+    ledOff();
+    led0Off();
+    led1Off();
+    led2Off();
 }
 
 /**
  * @brief Initialize SysTick timer for 1ms periodic interrupts
- *
- * SysTick configuration:
- * - Source: processor clock (HSI = 8MHz)
- * - Reload: 8000 - 1 = 7999 ticks = 1ms at 8MHz
- * - Enable: counter enabled, interrupt enabled
- *
- * CTRL bits: [RESERVED][RESERVED][RESERVED][COUNTFLAG][RESERVED][RESERVED][RESERVED][CLK_SRC][RESERVED][RESERVED][RESERVED][RESERVED][RESERVED][RESERVED][IE][ENABLE]
- *            = 0x07 = 0000 0111b = ENABLE(1) + CLK_SRC(1) = 8MHz source + IE(1) = interrupt enabled
  */
 void sysTickInit(void) {
     // Calculate ticks per millisecond: 8MHz / 1000 = 8000
-    uint32_t ticksPerMs = SystemCoreClock / 1000;
-
-    // LOAD: value loaded into VAL when counter reaches 0
-    SysTick_LOAD = ticksPerMs - 1;
-    // VAL: clear current value to start from reload value
-    SysTick_VAL = 0;
-    // CTRL: enable timer, use processor clock, enable interrupt
-    SysTick_CTRL = 0x07;
+    uint32_t ticksPerMs = HSI_CLOCK / 1000;
+    systickInit(ticksPerMs);
 }
 
 /**
@@ -134,9 +54,9 @@ void sysTickInit(void) {
  *
  * This is the system tick interrupt that provides:
  * 1. Global millisecond counter (systemTick)
- * 2. LED update callback (called every 1ms)
- * 3. Task scheduler update (for RTOS)
- * 4. Timer tick update (for software timers)
+ * 2. LED update callback
+ * 3. Task scheduler update
+ * 4. Timer tick update
  */
 void SysTick_Handler(void) {
     // Increment global system tick counter
@@ -146,62 +66,62 @@ void SysTick_Handler(void) {
     ledControlCallback();
 
     // Update RTOS task scheduler
-    // Checks blocked tasks and moves ready tasks to execution queue
     taskSchedule();
 
     // Update all active software timers
     timerTick();
 }
 
+/* LED control (PC13) */
 void ledOn(void) {
-    GPIOC_ODR &= ~(1 << 13);  // Set PC13 low (LED on - active low)
+    gpioWritePin(GPIO_PORT_C, 13, 0);  // Active low: write 0 to turn on
 }
 
 void ledOff(void) {
-    GPIOC_ODR |= (1 << 13);   // Set PC13 high (LED off - active low)
+    gpioWritePin(GPIO_PORT_C, 13, 1);  // Active low: write 1 to turn off
 }
 
 void ledToggle(void) {
-    GPIOC_ODR ^= (1 << 13);   // Toggle PC13
+    gpioTogglePin(GPIO_PORT_C, 13);
 }
 
-// PA0 LED functions (active low)
+/* LED 0 (PA0) */
 void led0On(void) {
-    GPIOA_ODR &= ~(1 << 0);  // Set PA0 low
+    gpioWritePin(GPIO_PORT_A, 0, 0);
 }
 
 void led0Off(void) {
-    GPIOA_ODR |= (1 << 0);   // Set PA0 high
+    gpioWritePin(GPIO_PORT_A, 0, 1);
 }
 
 void led0Toggle(void) {
-    GPIOA_ODR ^= (1 << 0);   // Toggle PA0
+    gpioTogglePin(GPIO_PORT_A, 0);
 }
 
-// PA1 LED functions (active low)
+/* LED 1 (PA1) */
 void led1On(void) {
-    GPIOA_ODR &= ~(1 << 1);  // Set PA1 low
+    gpioWritePin(GPIO_PORT_A, 1, 0);
 }
 
 void led1Off(void) {
-    GPIOA_ODR |= (1 << 1);   // Set PA1 high
+    gpioWritePin(GPIO_PORT_A, 1, 1);
 }
 
 void led1Toggle(void) {
-    GPIOA_ODR ^= (1 << 1);   // Toggle PA1
+    gpioTogglePin(GPIO_PORT_A, 1);
 }
 
-// PA2 LED functions (active low)
+/* LED 2 (PA2) */
 void led2On(void) {
-    GPIOA_ODR &= ~(1 << 2);  // Set PA2 low
+    gpioWritePin(GPIO_PORT_A, 2, 0);
 }
 
 void led2Off(void) {
-    GPIOA_ODR |= (1 << 2);   // Set PA2 high
+    gpioWritePin(GPIO_PORT_A, 2, 1);
 }
 
 void led2Toggle(void) {
-    GPIOA_ODR ^= (1 << 2);   // Toggle PA2
+    gpioTogglePin(GPIO_PORT_A, 2);
 }
 
 void delay_ms(uint32_t ms) {
@@ -211,4 +131,23 @@ void delay_ms(uint32_t ms) {
 
 uint32_t getSystemTick(void) {
     return systemTick;
+}
+
+/* Context switching functions */
+void triggerPendSV(void) {
+    // Trigger PendSV interrupt for context switch
+    volatile uint32_t *SHPR3 = (volatile uint32_t *)0xE000ED20;
+    *SHPR3 |= (0xFF << 16);  // Set PendSV priority
+    volatile uint32_t *ICSR = (volatile uint32_t *)0xE000ED04;
+    *ICSR = (1 << 28);       // Trigger PendSV
+}
+
+uint32_t getCurrentPSP(void) {
+    uint32_t result;
+    __asm volatile ("mrs %0, psp" : "=r" (result));
+    return result;
+}
+
+void setCurrentPSP(uint32_t psp) {
+    __asm volatile ("msr psp, %0" : : "r" (psp));
 }
