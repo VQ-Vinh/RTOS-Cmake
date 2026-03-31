@@ -41,40 +41,6 @@ uint32_t getSystemTick(void);
  */
 void delay_ms(uint32_t ms);
 
-/* =============================================================================
- * LED Control
- * ============================================================================= */
-
-/**
- * @brief LED on (PC13)
- */
-void ledOn(void);
-
-/**
- * @brief LED off (PC13)
- */
-void ledOff(void);
-
-/**
- * @brief LED toggle (PC13)
- */
-void ledToggle(void);
-
-/* LED 0 (PA0) */
-void led0On(void);
-void led0Off(void);
-void led0Toggle(void);
-
-/* LED 1 (PA1) */
-void led1On(void);
-void led1Off(void);
-void led1Toggle(void);
-
-/* LED 2 (PA2) */
-void led2On(void);
-void led2Off(void);
-void led2Toggle(void);
-
 /**
  * @brief LED control callback - called every tick
  *        Implemented in App layer

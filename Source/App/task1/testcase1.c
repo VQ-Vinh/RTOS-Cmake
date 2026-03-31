@@ -12,12 +12,7 @@
  */
 
 #include "testcase1.h"
-
-// External LED toggle functions from port.c
-extern void ledToggle(void);     // PC13
-extern void led0Toggle(void);    // PA0
-extern void led1Toggle(void);    // PA1
-extern void led2Toggle(void);    // PA2
+#include "gpio.h"
 
 // =============================================================================
 // LED Blink Period Definitions
@@ -26,10 +21,10 @@ extern void led2Toggle(void);    // PA2
 // Toggle occurs every Period/2 milliseconds
 // Example: 500ms period = 250ms ON + 250ms OFF
 // =============================================================================
-#define LED_PC13_PERIOD 200   // PC13: 500ms cycle = 250ms toggle
-#define LED_PA0_PERIOD  500  // PA0:  1000ms cycle = 500ms toggle
-#define LED_PA1_PERIOD  1000  // PA1:  1500ms cycle = 750ms toggle
-#define LED_PA2_PERIOD  1500  // PA2:  2500ms cycle = 1250ms toggle
+#define LED_PC13_PERIOD 1000   // PC13: 1000ms cycle = 500ms toggle
+#define LED_PA0_PERIOD  1500  // PA0:  1500ms cycle = 750ms toggle
+#define LED_PA1_PERIOD  2500  // PA1:  2500ms cycle = 1250ms toggle
+#define LED_PA2_PERIOD  3000  // PA2:  3000ms cycle = 1500ms toggle
 
 // =============================================================================
 // LED Blink Counters
@@ -74,7 +69,7 @@ void testcase1_led_update(void) {
     counter_PC13++;
     if (counter_PC13 >= (LED_PC13_PERIOD / 2)) {
         counter_PC13 = 0;
-        ledToggle();
+        gpioTogglePin(GPIO_PORT_C, 13);
     }
 
     // -----------------------------------------------------------------
@@ -83,7 +78,7 @@ void testcase1_led_update(void) {
     counter_PA0++;
     if (counter_PA0 >= (LED_PA0_PERIOD / 2)) {
         counter_PA0 = 0;
-        led0Toggle();
+        gpioTogglePin(GPIO_PORT_A, 0);
     }
 
     // -----------------------------------------------------------------
@@ -92,7 +87,7 @@ void testcase1_led_update(void) {
     counter_PA1++;
     if (counter_PA1 >= (LED_PA1_PERIOD / 2)) {
         counter_PA1 = 0;
-        led1Toggle();
+        gpioTogglePin(GPIO_PORT_A, 1);
     }
 
     // -----------------------------------------------------------------
@@ -101,6 +96,6 @@ void testcase1_led_update(void) {
     counter_PA2++;
     if (counter_PA2 >= (LED_PA2_PERIOD / 2)) {
         counter_PA2 = 0;
-        led2Toggle();
+        gpioTogglePin(GPIO_PORT_A, 2);
     }
 }

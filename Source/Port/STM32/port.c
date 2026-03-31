@@ -33,11 +33,11 @@ void systemInit(void) {
     // PC13
     gpioInitPin(GPIO_PORT_C, 13, GPIO_MODE_OUTPUT_50MHZ, GPIO_CNF_PUSHPULL);
 
-    // Initialize LED state: all OFF (active-low = high)
-    ledOff();
-    led0Off();
-    led1Off();
-    led2Off();
+    // Initialize LED state: all OFF (active-high = 0)
+    gpioWritePin(GPIO_PORT_C, 13, 0);
+    gpioWritePin(GPIO_PORT_A, 0, 0);
+    gpioWritePin(GPIO_PORT_A, 1, 0);
+    gpioWritePin(GPIO_PORT_A, 2, 0);
 }
 
 /**
@@ -70,58 +70,6 @@ void SysTick_Handler(void) {
 
     // Update all active software timers
     timerTick();
-}
-
-/* LED control (PC13) */
-void ledOn(void) {
-    gpioWritePin(GPIO_PORT_C, 13, 0);  // Active low: write 0 to turn on
-}
-
-void ledOff(void) {
-    gpioWritePin(GPIO_PORT_C, 13, 1);  // Active low: write 1 to turn off
-}
-
-void ledToggle(void) {
-    gpioTogglePin(GPIO_PORT_C, 13);
-}
-
-/* LED 0 (PA0) */
-void led0On(void) {
-    gpioWritePin(GPIO_PORT_A, 0, 0);
-}
-
-void led0Off(void) {
-    gpioWritePin(GPIO_PORT_A, 0, 1);
-}
-
-void led0Toggle(void) {
-    gpioTogglePin(GPIO_PORT_A, 0);
-}
-
-/* LED 1 (PA1) */
-void led1On(void) {
-    gpioWritePin(GPIO_PORT_A, 1, 0);
-}
-
-void led1Off(void) {
-    gpioWritePin(GPIO_PORT_A, 1, 1);
-}
-
-void led1Toggle(void) {
-    gpioTogglePin(GPIO_PORT_A, 1);
-}
-
-/* LED 2 (PA2) */
-void led2On(void) {
-    gpioWritePin(GPIO_PORT_A, 2, 0);
-}
-
-void led2Off(void) {
-    gpioWritePin(GPIO_PORT_A, 2, 1);
-}
-
-void led2Toggle(void) {
-    gpioTogglePin(GPIO_PORT_A, 2);
 }
 
 void delay_ms(uint32_t ms) {
