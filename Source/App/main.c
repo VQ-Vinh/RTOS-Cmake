@@ -3,7 +3,12 @@
 #include "task.h"
 #include "timer.h"
 #include "semaphore.h"
-#include "task1/testcase1.h"
+
+#ifdef STM32F1
+#include "testcase_f1.h"
+#else
+#include "testcase1.h"
+#endif
 
 // Port functions
 extern void systemInit(void);

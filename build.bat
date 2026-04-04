@@ -5,7 +5,7 @@ REM Requirements: CMake, ARM GCC toolchain (arm-none-eabi-gcc)
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo CustomRTOS Build for STM32F103
+echo CustomRTOS Build for STM32F4
 echo ========================================
 
 REM Check if CMake exists
