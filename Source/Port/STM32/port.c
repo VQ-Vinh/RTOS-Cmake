@@ -33,8 +33,8 @@ void systemInit(void) {
     // PC13
     gpioInitPin(GPIO_PORT_C, 13, GPIO_MODE_OUTPUT_50MHZ, GPIO_CNF_PUSHPULL);
 
-    // Initialize LED state: all OFF (active-high = 0)
-    gpioWritePin(GPIO_PORT_C, 13, 0);
+    // Initialize LED state: all OFF (active-low = 1)
+    gpioWritePin(GPIO_PORT_C, 13, 1);
     gpioWritePin(GPIO_PORT_A, 0, 0);
     gpioWritePin(GPIO_PORT_A, 1, 0);
     gpioWritePin(GPIO_PORT_A, 2, 0);
