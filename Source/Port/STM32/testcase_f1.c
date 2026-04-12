@@ -30,7 +30,7 @@
 // Toggle occurs every Period/2 milliseconds
 // Example: 1000ms period = 500ms ON + 500ms OFF
 // =============================================================================
-#define LED_PC13_PERIOD 1000   // PC13: 1000ms cycle = 500ms toggle (FASTEST)
+#define LED_PC13_PERIOD 2000  // PC13: 2000ms cycle = 1000ms toggle (FASTEST)
 #define LED_PA0_PERIOD  1500   // PA0:  1500ms cycle = 750ms toggle
 #define LED_PA1_PERIOD  2500   // PA1:  2500ms cycle = 1250ms toggle
 #define LED_PA2_PERIOD  3000   // PA2:  3000ms cycle = 1500ms toggle (SLOWEST)

@@ -26,10 +26,10 @@
 // Toggle occurs every Period/2 milliseconds
 // Example: 500ms period = 250ms ON + 250ms OFF
 // =============================================================================
-#define LED_PD12_PERIOD 1000   // PD12: 1000ms cycle = 500ms toggle (FASTEST)
-#define LED_PD13_PERIOD 1500   // PD13: 1500ms cycle = 750ms toggle
-#define LED_PD14_PERIOD 2500   // PD14: 2500ms cycle = 1250ms toggle
-#define LED_PD15_PERIOD 3000   // PD15: 3000ms cycle = 1500ms toggle (SLOWEST)
+#define LED_PD12_PERIOD 2000   // PD12: 2000ms cycle = 1000ms toggle (FASTEST)
+#define LED_PD13_PERIOD 4000   // PD13: 4000ms cycle = 2000ms toggle
+#define LED_PD14_PERIOD 6000   // PD14: 6000ms cycle = 3000ms toggle
+#define LED_PD15_PERIOD 8000   // PD15: 8000ms cycle = 4000ms toggle (SLOWEST)
 
 // =============================================================================
 // LED Blink Counters
