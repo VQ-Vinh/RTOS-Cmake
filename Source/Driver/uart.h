@@ -10,9 +10,9 @@
 
 /* UART peripheral definitions */
 typedef enum {
-    UART1 = 0,
-    UART2 = 1,
-    UART3 = 2
+    UART_PERIPHERAL_1 = 0,
+    UART_PERIPHERAL_2 = 1,
+    UART_PERIPHERAL_3 = 2
 } UART_Peripheral_t;
 
 /* UART Baudrate options */

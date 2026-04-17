@@ -79,14 +79,14 @@ typedef struct {
 // Static Functions
 // =============================================================================
 static void uartConfigPins(UART_Peripheral_t uart) {
-    if (uart == UART1) {
+    if (uart == UART_PERIPHERAL_1) {
         /* UART1: PA9 (TX), PA10 (RX) */
         rccEnableClock(RCC_GPIO_A_EN);
 
         /* TX: PA9 - Alternate function push-pull 50MHz */
         GPIOA->CRH &= ~0x0000F00F;
         GPIOA->CRH |= 0x0000B00B;   /* TX: Alt PP 50MHz, RX: Input floating */
-    } else if (uart == UART2) {
+    } else if (uart == UART_PERIPHERAL_2) {
         /* UART2: PA2 (TX), PA3 (RX) */
         rccEnableClock(RCC_GPIO_A_EN);
 
@@ -110,17 +110,17 @@ static uint32_t uartCalcBaudrate(uint32_t baudrate) {
 
 static UART_TypeDef* uartGetBase(UART_Peripheral_t uart) {
     switch (uart) {
-        case UART1: return UART1;
-        case UART2: return UART2;
-        case UART3: return UART3;
+        case UART_PERIPHERAL_1: return UART1;
+        case UART_PERIPHERAL_2: return UART2;
+        case UART_PERIPHERAL_3: return UART3;
         default: return UART1;
     }
 }
 
 static void uartEnableClock(UART_Peripheral_t uart) {
-    if (uart == UART1) {
+    if (uart == UART_PERIPHERAL_1) {
         rccEnableClock(RCC_UART1_EN);
-    } else if (uart == UART2) {
+    } else if (uart == UART_PERIPHERAL_2) {
         rccEnableClock(RCC_UART2_EN);
     } else {
         rccEnableClock(RCC_UART3_EN);
