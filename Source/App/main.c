@@ -3,6 +3,7 @@
 #include "esp01.h"
 #include "port.h"
 #include "gpio.h"
+#include "uart.h"
 
 int main(void) {
     // Initialize system hardware (clocks, RCC, GPIO)
@@ -21,21 +22,36 @@ int main(void) {
     // Initialize ESP32 connectivity (UART1: PA9=TX, PA10=RX)
     esp01Init();
 
-    uint32_t lastTick = 0;
+    uint32_t lastToggle = 0;
+    uint32_t lastSend = 0;
+    uint32_t ledOffTime = 0;
 
     while (1) {
         uint32_t now = getSystemTick();
 
-        // Read sensor and send data every 1000ms
-        if (now - lastTick >= 1000) {
-            lastTick = now;
-            gpioTogglePin(GPIO_PORT_C, 13);  // Toggle LED indicator
+        // Toggle LED every 500ms as indicator
+        if (now - lastToggle >= 500) {
+            lastToggle = now;
+            gpioTogglePin(GPIO_PORT_C, 13);
+        }
 
-            // Read MQ2 ADC value (0-4095)
-            uint16_t mq2_value = adcRead();
-            
-            // Send to ESP32: "MQ2:XXXX\n"
-            esp01SendReading(mq2_value);
+        // Read ADC and send every 100ms
+        if (now - lastSend >= 100) {
+            lastSend = now;
+
+            // LED on for 200ms when sending
+            gpioWritePin(GPIO_PORT_C, 13, 0);  // LED on (active-low)
+            ledOffTime = now + 200;
+
+            // Read ADC value and send immediately
+            uint16_t adcValue = adcRead();
+            esp01SendReading(adcValue);
+        }
+
+        // Turn LED off after 200ms
+        if (ledOffTime > 0 && now >= ledOffTime) {
+            gpioWritePin(GPIO_PORT_C, 13, 1);  // LED off
+            ledOffTime = 0;
         }
     }
 

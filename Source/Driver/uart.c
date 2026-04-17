@@ -83,29 +83,36 @@ static void uartConfigPins(UART_Peripheral_t uart) {
         /* UART1: PA9 (TX), PA10 (RX) */
         rccEnableClock(RCC_GPIO_A_EN);
 
-        /* TX: PA9 - Alternate function push-pull 50MHz */
-        GPIOA->CRH &= ~0x0000F00F;
-        GPIOA->CRH |= 0x0000B00B;   /* TX: Alt PP 50MHz, RX: Input floating */
+        /* TX: PA9 - Alternate function push-pull, RX: PA10 - Floating input */
+        GPIOA->CRH &= ~0x00000FF0;  /* Clear bits 4-11 for PA9, PA10 */
+        GPIOA->CRH |= 0x000004B0;   /* PA9=0xB (Alt PP), PA10=0x4 (Input) */
     } else if (uart == UART_PERIPHERAL_2) {
         /* UART2: PA2 (TX), PA3 (RX) */
         rccEnableClock(RCC_GPIO_A_EN);
 
         /* TX: PA2, RX: PA3 */
         GPIOA->CRL &= ~0xFF00;
-        GPIOA->CRL |= 0xBB00;
+        GPIOA->CRL |= 0x4B00;  /* PA2=0xB (Alt PP), PA3=0x4 (Input) */
     } else {
         /* UART3: PC10 (TX), PC11 (RX) */
         rccEnableClock(RCC_GPIO_C_EN);
 
         /* TX: PC10, RX: PC11 */
-        GPIOC->CRH &= ~0xFFFF;
-        GPIOC->CRH |= 0xFFFF;
+        GPIOC->CRH &= ~0x0000FF00;
+        GPIOC->CRH |= 0x00004B00;  /* PC10=0xB (Alt PP), PC11=0x4 (Input) */
     }
 }
 
-static uint32_t uartCalcBaudrate(uint32_t baudrate) {
-    /* BRR = APB2Clock / baudrate for UART1 on APB2 */
-    return SystemCoreClock / baudrate;
+static uint32_t uartCalcBaudrate(UART_Peripheral_t uart, uint32_t baudrate) {
+    /* BRR register format: (DIV_Mantissa << 4) | FRAC
+     * where DIV_Mantissa + FRAC/16 = FCLK / (16 * baudrate)
+     * UART1 on APB2 (72MHz), UART2/3 on APB1 (36MHz)
+     */
+    uint32_t clock = (uart == UART_PERIPHERAL_1) ? SystemCoreClock : (SystemCoreClock / 2);
+    uint32_t divider = clock / baudrate;  /* FCLK / Baudrate gives the value with 16.4 format */
+    uint32_t mantissa = divider >> 4;
+    uint32_t fraction = divider & 0x0F;
+    return (mantissa << 4) | fraction;
 }
 
 static UART_TypeDef* uartGetBase(UART_Peripheral_t uart) {
@@ -143,8 +150,9 @@ void uartInit(UART_Peripheral_t uart, UART_Baudrate_t baudrate) {
     /* Disable UART before configuration */
     uartx->CR1 = 0x0000;
 
-    /* Set baudrate */
-    uartx->BRR = uartCalcBaudrate(baudrate);
+    /* Set baudrate using corrected formula */
+    uint32_t brr = uartCalcBaudrate(uart, (uint32_t)baudrate);
+    uartx->BRR = brr;
 
     /* Enable TX and RX, 8 data bits */
     uartx->CR1 = 0x000C;  /* TE=1, RE=1 */

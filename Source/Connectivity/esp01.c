@@ -18,18 +18,16 @@ void esp01Init(void) {
 }
 
 /**
- * @brief Send MQ2 gas sensor reading to ESP32
- * Format: "MQ2:XXXX\n" where XXXX is ADC value (0-4095)
+ * @brief Send raw MQ2 ADC reading to ESP32
+ * Format: "4095\n" (just the number)
  */
 void esp01SendReading(uint16_t value) {
-    uartPrintf(UART_PERIPHERAL_1, "MQ2:%u\n", value);
+    uartPrintf(UART_PERIPHERAL_1, "%u\n", value);
 }
 
 /**
  * @brief Send formatted message to ESP32 (wrapper for uartPrintf)
  */
 void esp01Printf(const char *format, ...) {
-    // This would require variadic macro support - delegate to uartPrintf
-    // For now, use direct uartPrintf in your code
-    // Future: implement variadic wrapper if needed
+    (void)format;
 }

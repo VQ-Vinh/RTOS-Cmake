@@ -16,11 +16,11 @@
 void esp01Init(void);
 
 /**
- * @brief Send MQ2 gas sensor reading to ESP32
+ * @brief Send raw MQ2 ADC reading to ESP32
  * @param value: ADC reading from MQ2 (0-4095)
  * 
- * Format sent: "MQ2:4095\n"
- * Where 4095 = maximum gas concentration
+ * Format sent: "4095\n"
+ * Just the number without any prefix, continuous stream
  */
 void esp01SendReading(uint16_t value);
 
