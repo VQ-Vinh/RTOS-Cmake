@@ -41,12 +41,6 @@ uint32_t getSystemTick(void);
  */
 void delay_ms(uint32_t ms);
 
-/**
- * @brief LED control callback - called every tick
- *        Implemented in App layer
- */
-extern void ledControlCallback(void);
-
 /* =============================================================================
  * Context Switching (for Scheduler)
  * ============================================================================= */

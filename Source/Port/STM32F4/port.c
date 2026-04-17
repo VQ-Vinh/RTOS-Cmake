@@ -11,8 +11,6 @@
 #include "rcc.h"
 #include "gpio.h"
 #include "systick.h"
-#include "task.h"
-#include "timer.h"
 
 /* System tick counter */
 volatile uint32_t systemTick = 0;
@@ -60,15 +58,6 @@ void sysTickInit(void) {
 void SysTick_Handler(void) {
     // Increment global system tick counter
     systemTick++;
-
-    // Update LED states based on elapsed time
-    ledControlCallback();
-
-    // Update RTOS task scheduler
-    taskSchedule();
-
-    // Update all active software timers
-    timerTick();
 }
 
 void delay_ms(uint32_t ms) {

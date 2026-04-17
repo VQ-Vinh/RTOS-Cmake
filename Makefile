@@ -48,7 +48,7 @@ LDFLAGS_F4 = $(MCU_F4) -Tstm32_f407.ld
 LDFLAGS_F4 += -Wl,--gc-sections -Wl,--print-memory-usage
 LDFLAGS_F4 += -specs=nano.specs -specs=nosys.specs
 
-INCLUDE_F4 = -ISource/Kernel/Inc -ISource/Port/STM32F4 -ISource/App
+INCLUDE_F4 = -ISource/Kernel/Inc -ISource/Port/STM32F4 -ISource/Driver_f4 -ISource/Air_quality_f4 -ISource/Connectivity_f4 -ISource/App
 
 SOURCES_F4 = \
     Source/Kernel/Src/list.c \
@@ -60,7 +60,9 @@ SOURCES_F4 = \
     Source/Port/STM32F4/gpio.c \
     Source/Port/STM32F4/systick.c \
     Source/Port/STM32F4/startup.c \
-    Source/Port/STM32F4/testcase1.c \
+    Source/Driver_f4/uart_f4.c \
+    Source/Air_quality_f4/adc_f4.c \
+    Source/Connectivity_f4/esp01_f4.c \
     Source/App/main.c
 
 # =============================================================================
