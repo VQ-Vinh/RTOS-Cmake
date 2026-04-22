@@ -12,15 +12,15 @@
 #include "../Driver/gpio.h"
 #include <stddef.h>
 
-/* DHT11 data structure for internal use */
-static DHT11_Data_t dht11_data;
+/* DHT11 handle for internal use */
+static DHT11_Handle_t dht11_handle;
 
 void airQualityInit(void) {
     /* Initialize MQ2 gas sensor */
     mq2Init();
 
     /* Initialize DHT11 on PA0 */
-    dht11Init(GPIO_PORT_A, 0);
+    DHT11_Init(&dht11_handle, GPIO_PORT_A, 0);
 }
 
 int8_t airQualityRead(AirQuality_Data_t *data) {
@@ -34,9 +34,10 @@ int8_t airQualityRead(AirQuality_Data_t *data) {
     data->mq2_adc = mq2ReadADC();
 
     /* Read DHT11 temperature & humidity */
-    if (dht11Read(&dht11_data) == 0) {
-        data->temperature = dht11_data.temperature;
-        data->humidity = dht11_data.humidity;
+    DHT11_ReadData(&dht11_handle);
+    if (dht11_handle.Status == DHT11_OK) {
+        data->temperature = (int8_t)dht11_handle.Temperature;
+        data->humidity = (int8_t)dht11_handle.Humidity;
         data->dht11_error = 0;
         result = 0;
     } else {
