@@ -25,15 +25,23 @@ LDFLAGS_F1 = $(MCU_F1) -Tstm32_f103.ld
 LDFLAGS_F1 += -Wl,--gc-sections -Wl,--print-memory-usage
 LDFLAGS_F1 += -specs=nano.specs -specs=nosys.specs
 
-INCLUDE_F1 = -ISource/Port/STM32 -ISource/Driver -ISource/air_quality -ISource/Connectivity -ISource/App
+INCLUDE_F1 = -ISource/Port/STM32 -ISource/Driver -ISource/Sensor_Lib -ISource/Air_quality -ISource/Connectivity -ISource/App -ISource/Kernel/Inc
 
 SOURCES_F1 = \
-    Source/Port/STM32/rcc.c \
-    Source/Port/STM32/gpio.c \
+    Source/Kernel/Src/list.c \
+    Source/Kernel/Src/task.c \
+    Source/Kernel/Src/timer.c \
+    Source/Kernel/Src/semaphore.c \
     Source/Port/STM32/port.c \
     Source/Port/STM32/startup.c \
+    Source/Driver/gpio.c \
+    Source/Driver/rcc.c \
+    Source/Driver/systick.c \
     Source/Driver/uart.c \
-    Source/air_quality/adc.c \
+    Source/Driver/adc.c \
+    Source/Sensor_Lib/mq2.c \
+    Source/Sensor_Lib/dht11.c \
+    Source/Air_quality/air_quality.c \
     Source/Connectivity/esp01.c \
     Source/App/main.c
 

@@ -7,6 +7,7 @@
 
 #include "esp01.h"
 #include "../../Driver/uart.h"
+#include <stddef.h>
 
 /**
  * @brief Initialize ESP32 connectivity
@@ -18,10 +19,29 @@ void esp01Init(void) {
 }
 
 /**
- * @brief Send raw MQ2 ADC reading to ESP32
- * Format: "4095\n" (just the number)
+ * @brief Send sensor data to ESP32
+ * Format: "[temp,humidity,mq2]\n"
+ * Example: "[25,65,2048]\n"
  */
-void esp01SendReading(uint16_t value) {
+void esp01SendReading(int8_t temperature, int8_t humidity, uint16_t mq2_adc) {
+    uartPrintf(UART_PERIPHERAL_1, "[%d,%d,%u]\n", temperature, humidity, mq2_adc);
+}
+
+/**
+ * @brief Send air quality data to ESP32
+ * Format: "[temp,humidity,mq2]\n"
+ */
+void esp01SendAirQuality(AirQuality_Data_t *data) {
+    if (data != NULL) {
+        uartPrintf(UART_PERIPHERAL_1, "[%d,%d,%u]\n",
+                   data->temperature, data->humidity, data->mq2_adc);
+    }
+}
+
+/**
+ * @brief Send raw MQ2 ADC reading to ESP32
+ */
+void esp01SendMQ2(uint16_t value) {
     uartPrintf(UART_PERIPHERAL_1, "%u\n", value);
 }
 

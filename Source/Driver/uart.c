@@ -4,7 +4,7 @@
  */
 
 #include "uart.h"
-#include "../Port/STM32/rcc.h"
+#include "rcc.h"
 #include <stdarg.h>
 #include <string.h>
 
@@ -161,7 +161,7 @@ void uartInit(UART_Peripheral_t uart, UART_Baudrate_t baudrate) {
     uartx->CR1 |= 0x2000;  /* UE=1 */
 }
 
-void uartPutChar(UART_Peripheral_t uart, uint8_t ch) {
+    void uartPutChar(UART_Peripheral_t uart, uint8_t ch) {
     UART_TypeDef *uartx = uartGetBase(uart);
 
     /* Wait for TX buffer empty (TXE) */

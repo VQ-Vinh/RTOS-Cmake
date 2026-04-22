@@ -102,25 +102,29 @@ set(INCLUDE_DIRS_F1
     ${CMAKE_SOURCE_DIR}/Source/Kernel/Inc
     ${CMAKE_SOURCE_DIR}/Source/Port/STM32
     ${CMAKE_SOURCE_DIR}/Source/Driver
-    ${CMAKE_SOURCE_DIR}/Source/air_quality
+    ${CMAKE_SOURCE_DIR}/Source/Sensor_Lib
+    ${CMAKE_SOURCE_DIR}/Source/Air_quality
     ${CMAKE_SOURCE_DIR}/Source/Connectivity
     ${CMAKE_SOURCE_DIR}/Source/App
 )
 
-# Port sources for STM32F1
+# Port sources for STM32F1 (gpio/rcc/systick are in Driver/, not Port/STM32/)
 set(PORT_SOURCES_F1
     Source/Port/STM32/port.c
-    Source/Port/STM32/rcc.c
-    Source/Port/STM32/gpio.c
-    Source/Port/STM32/systick.c
     Source/Port/STM32/startup.c
+    Source/Driver/gpio.c
+    Source/Driver/rcc.c
+    Source/Driver/systick.c
 )
 
-# Air quality and connectivity sources
+# Air quality, connectivity and middleware sources for STM32F1
 set(APP_SOURCES_F1
     ${APP_SOURCES}
     Source/Port/STM32/testcase_f1.c
-    Source/air_quality/adc.c
+    Source/Driver/adc.c
+    Source/Sensor_Lib/mq2.c
+    Source/Sensor_Lib/dht11.c
+    Source/Air_quality/air_quality.c
     Source/Connectivity/esp01.c
 )
 
