@@ -14,6 +14,11 @@
 #endif
 
 /**
+ * @brief System tick counter (milliseconds)
+ */
+extern volatile uint32_t systemTick;
+
+/**
  * @brief Initialize SysTick timer
  * @param ticks: Number of ticks per interrupt
  */
@@ -50,6 +55,18 @@ uint32_t systickGetValue(void);
  * @return 1 if countflag, 0 otherwise
  */
 uint8_t systickGetCountFlag(void);
+
+/**
+ * @brief Get current system tick (milliseconds)
+ * @return Current tick count
+ */
+uint32_t getSystemTick(void);
+
+/**
+ * @brief Blocking delay in milliseconds
+ * @param ms: Number of milliseconds to delay
+ */
+void delay_ms(uint32_t ms);
 
 /**
  * @brief Microsecond delay using SysTick

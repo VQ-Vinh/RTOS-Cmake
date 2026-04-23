@@ -20,12 +20,12 @@
 #define SYSTICK_CTRL_CLKSOURCE (1 << 2)
 #define SYSTICK_CTRL_COUNTFLAG (1 << 16)
 
+// System tick counter (milliseconds)
+volatile uint32_t systemTick = 0;
+
 void systickInit(uint32_t ticks) {
-    // Set reload value
     SysTick_LOAD = ticks - 1;
-    // Clear current value
     SysTick_VAL = 0;
-    // Configure: enable, processor clock, interrupt enabled
     SysTick_CTRL = SYSTICK_CTRL_CLKSOURCE | SYSTICK_CTRL_TICKINT | SYSTICK_CTRL_ENABLE;
 }
 
@@ -51,6 +51,15 @@ uint32_t systickGetValue(void) {
 
 uint8_t systickGetCountFlag(void) {
     return (SysTick_CTRL >> 16) & 0x1;
+}
+
+uint32_t getSystemTick(void) {
+    return systemTick;
+}
+
+void delay_ms(uint32_t ms) {
+    uint32_t start = systemTick;
+    while ((systemTick - start) < ms);
 }
 
 void systickDelayUs(uint32_t us) {
