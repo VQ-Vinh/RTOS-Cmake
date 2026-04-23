@@ -9,7 +9,7 @@
 #ifndef GPIO_H
 #define GPIO_H
 
-#include <stdint.h"
+#include <stdint.h>
 
 /* ========== Chế độ hoạt động ========== */
 typedef enum {
