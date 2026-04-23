@@ -120,7 +120,7 @@ set(PORT_SOURCES_F1
 # Air quality, connectivity and middleware sources for STM32F1
 set(APP_SOURCES_F1
     ${APP_SOURCES}
-    Source/Port/STM32/testcase_f1.c
+    Source/App/Testcase/testcase_f1.c
     Source/Driver/adc.c
     Source/Sensor_Lib/mq2.c
     Source/Sensor_Lib/dht11.c
