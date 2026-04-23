@@ -1,9 +1,9 @@
 /**
  * @file mq2.h
  * @brief MQ2 Gas Sensor Library
- * Uses Driver/adc.c for ADC operations
  *
- * TODO: Expand for PPM calculation (sensitivity curve)
+ * Chức năng: Đọc cảm biến khí gas MQ2
+ * Giao tiếp: ADC channel 8 (PB0)
  */
 
 #ifndef MQ2_H
@@ -11,36 +11,41 @@
 
 #include <stdint.h>
 
-/* MQ2 ADC channel */
-#define MQ2_ADC_CHANNEL   8      /* PB0 on STM32F1 */
+/* ========== Cấu hình MQ2 ========== */
+#define MQ2_ADC_CHANNEL   8      /* PB0 trên STM32F1 */
 #define MQ2_ADC_SAMPLE    ADC_SAMPLE_71_5  /* 71.5 cycles sample time */
 
+/* ========== Hàm API ========== */
+
 /**
- * @brief Initialize MQ2 sensor
- * Configures ADC channel 8 (PB0) for MQ2 sensor
+ * @brief Khởi tạo MQ2 sensor
+ *
+ * Cấu hình ADC channel 8 (PB0) cho MQ2
  */
 void mq2Init(void);
 
 /**
- * @brief Read MQ2 gas sensor raw ADC value
- * @return: ADC value (0-4095 for 12-bit)
+ * @brief Đọc giá trị ADC thô từ MQ2
+ * @return: Giá trị ADC (0-4095)
  *
- * Note: 0 = 0V (no gas), 4095 = 3.3V (maximum gas concentration)
+ * Ý nghĩa:
+ * - 0 = 0V (không có gas)
+ * - 4095 = 3.3V (nồng độ gas tối đa)
  */
 uint16_t mq2ReadADC(void);
 
 /**
- * @brief Read MQ2 gas concentration
- * @return: Gas concentration (raw ADC value, for now)
+ * @brief Đọc nồng độ gas (PPM)
+ * @return: Giá trị PPM
  *
- * TODO: Convert to PPM using sensitivity curve
- * Formula: PPM = a * (ratio^b) where ratio = sensorResistance / cleanAirResistance
+ * TODO: Chuyển đổi ADC sang PPM dùng sensitivity curve
+ * Công thức: PPM = a * (ratio^b)
  */
 uint16_t mq2ReadPPM(void);
 
 /**
- * @brief Check if MQ2 is initialized
- * @return: 1 if initialized, 0 if not
+ * @brief Kiểm tra MQ2 đã khởi tạo chưa
+ * @return: 1 = đã init, 0 = chưa
  */
 uint8_t mq2IsInitialized(void);
 

@@ -1,6 +1,8 @@
 /**
  * @file rcc.h
- * @brief STM32F1 RCC (Reset & Clock Control) Driver
+ * @brief RCC Driver - Reset & Clock Control
+ *
+ * Chức năng: Cấu hình clock hệ thống, bật/tắt clock ngoại vi
  */
 
 #ifndef RCC_H
@@ -8,38 +10,36 @@
 
 #include <stdint.h>
 
-/* =============================================================================
- * RCC APB2ENR Clock Enable Bits
- * ============================================================================= */
-#define RCC_IOPAEN     (1 << 2)
-#define RCC_IOPBEN     (1 << 3)
-#define RCC_IOPCEN     (1 << 4)
-#define RCC_ADC1EN     (1 << 9)
-#define RCC_USART1EN   (1 << 14)
+/* ========== Clock Enable Bits (APB2ENR) ========== */
+/* Dùng để bật clock cho các peripheral */
+#define RCC_IOPAEN     (1 << 2)   /* GPIO Port A */
+#define RCC_IOPBEN     (1 << 3)   /* GPIO Port B */
+#define RCC_IOPCEN     (1 << 4)   /* GPIO Port C */
+#define RCC_ADC1EN     (1 << 9)   /* ADC1 */
+#define RCC_USART1EN   (1 << 14)   /* USART1 */
+
+/* ========== Hàm API ========== */
 
 /**
- * @brief Configure System Clock to 72MHz from external 8MHz crystal
+ * @brief Cấu hình clock hệ thống 72MHz
  *
- * Configuration:
- * - HSE (High Speed External): 8MHz crystal
- * - PLL: Enabled, source HSE, multiplier = 9
- * - SYSCLK: 72MHz (8MHz * 9)
- * - HCLK: 72MHz (AHB divider = 1)
- * - PCLK1: 36MHz (APB1 divider = 2)
- * - PCLK2: 72MHz (APB2 divider = 1)
- * - Flash latency: 2 wait states
+ * Nguồn clock: HSE 8MHz thạch anh ngoài
+ * PLL: 8MHz * 9 = 72MHz
+ * Bus: AHB 72MHz, APB1 36MHz, APB2 72MHz
  */
 void SystemClock_Config(void);
 
 /**
- * @brief Enable clock for peripheral
- * @param peripheral: Bit position of peripheral in APB2ENR register
+ * @brief Bật clock peripheral
+ * @param peripheral: Bit mask (VD: RCC_IOPAEN)
+ *
+ * Ví dụ: rccEnableClock(RCC_IOPAEN | RCC_ADC1EN);
  */
 void rccEnableClock(uint32_t peripheral);
 
 /**
- * @brief Disable clock for peripheral
- * @param peripheral: Bit position of peripheral in APB2ENR register
+ * @brief Tắt clock peripheral
+ * @param peripheral: Bit mask
  */
 void rccDisableClock(uint32_t peripheral);
 

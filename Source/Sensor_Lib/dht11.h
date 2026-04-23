@@ -1,8 +1,9 @@
 /**
  * @file dht11.h
  * @brief DHT11 Temperature & Humidity Sensor Driver
- * @note Single-wire communication protocol
- * @note HAL-style API for Custom RTOS
+ *
+ * Chức năng: Đọc nhiệt độ và độ ẩm từ DHT11
+ * Giao tiếp: Single-wire protocol (1-wire)
  */
 
 #ifndef DHT11_H
@@ -13,83 +14,86 @@
 /* Forward declaration */
 typedef struct _DHT11_Handle_t DHT11_Handle_t;
 
-/**
- * @brief DHT11 status enum
- */
+/* ========== Trạng thái DHT11 ========== */
 typedef enum {
-    DHT11_OK = 0,
-    DHT11_TIMEOUT,
-    DHT11_ERROR,
-    DHT11_CHECKSUM_MISMATCH,
-    DHT11_INVALID_PARAMETER,
+    DHT11_OK = 0,              /* Thành công */
+    DHT11_TIMEOUT,             /* Timeout - DHT11 không phản hồi */
+    DHT11_ERROR,               /* Lỗi tổng quát */
+    DHT11_CHECKSUM_MISMATCH,    /* Checksum không khớp */
+    DHT11_INVALID_PARAMETER,   /* Tham số không hợp lệ */
     __DHT11_STATUS_TYPEDEF_COUNT__
 } DHT11_StatusTypeDef;
 
+/* ========== Cấu trúc handle ========== */
+
 /**
- * @brief DHT11 handle structure
- * @note Contains all info needed for DHT11 communication
+ * @brief DHT11 handle - lưu trữ thông tin giao tiếp
  */
 typedef struct _DHT11_Handle_t {
-    uint8_t port;           // GPIO port (0=A, 1=B, 2=C)
-    uint8_t pin;            // GPIO pin number (0-15)
-    float Temperature;       // Temperature in Celsius
-    float Humidity;         // Relative Humidity in %
-    DHT11_StatusTypeDef Status;  // Last operation status
+    uint8_t port;               /* GPIO port (0=A, 1=B, 2=C) */
+    uint8_t pin;                /* GPIO pin (0-15) */
+    float Temperature;           /* Nhiệt độ (°C) */
+    float Humidity;              /* Độ ẩm (%RH) */
+    DHT11_StatusTypeDef Status; /* Trạng thái cuối operation */
 } DHT11_Handle_t;
 
-/* Error message array */
+/* ========== Error messages ========== */
 extern const char* const DHT11_ErrorMsg[__DHT11_STATUS_TYPEDEF_COUNT__];
 
+/* ========== Hàm API ========== */
+
 /**
- * @brief Initialize DHT11 sensor
+ * @brief Khởi tạo DHT11
  * @param handle: DHT11 handle pointer
  * @param port: GPIO port (0=A, 1=B, 2=C)
  * @param pin: Pin number (0-15)
- * @note Must be called before any other DHT11 operations
+ *
+ * Phải gọi trước mọi thao tác DHT11 khác
  */
 void DHT11_Init(DHT11_Handle_t *handle, uint8_t port, uint8_t pin);
 
 /**
- * @brief De-initialize DHT11 sensor
+ * @brief Tắt DHT11, giải phóng GPIO pin
  * @param handle: DHT11 handle pointer
- * @note Releases GPIO pin
  */
 void DHT11_DeInit(DHT11_Handle_t *handle);
 
 /**
- * @brief Get error message string
- * @param status: DHT11 status code
- * @return Error message string
+ * @brief Lấy thông báo lỗi
+ * @param status: Mã lỗi DHT11
+ * @return: Chuỗi mô tả lỗi
  */
 const char* DHT11_GetErrorMsg(DHT11_StatusTypeDef status);
 
 /**
- * @brief Read temperature and humidity from DHT11
+ * @brief Đọc dữ liệu từ DHT11
  * @param handle: DHT11 handle pointer
- * @return DHT11 status (DHT11_OK on success)
- * @note Blocking ~4ms read time
- * @note Disables interrupts during read for timing accuracy
+ * @return: Trạng thái DHT11 (DHT11_OK = thành công)
+ *
+ * Lưu ý:
+ * - Blocking ~4ms
+ * - Disable interrupts trong lúc đọc (đảm bảo timing)
  */
 DHT11_StatusTypeDef DHT11_ReadData(DHT11_Handle_t *handle);
 
 /**
- * @brief Read temperature in Celsius
+ * @brief Đọc nhiệt độ (Celsius)
  * @param handle: DHT11 handle pointer
- * @return Temperature in Celsius
+ * @return: Nhiệt độ (°C)
  */
 float DHT11_ReadTemperatureC(DHT11_Handle_t *handle);
 
 /**
- * @brief Read temperature in Fahrenheit
+ * @brief Đọc nhiệt độ (Fahrenheit)
  * @param handle: DHT11 handle pointer
- * @return Temperature in Fahrenheit
+ * @return: Nhiệt độ (°F)
  */
 float DHT11_ReadTemperatureF(DHT11_Handle_t *handle);
 
 /**
- * @brief Read relative humidity
+ * @brief Đọc độ ẩm
  * @param handle: DHT11 handle pointer
- * @return Humidity in %
+ * @return: Độ ẩm (%RH)
  */
 float DHT11_ReadHumidity(DHT11_Handle_t *handle);
 

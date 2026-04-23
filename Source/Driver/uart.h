@@ -1,6 +1,10 @@
 /**
  * @file uart.h
- * @brief STM32F1 UART Driver
+ * @brief UART Driver - Serial Communication
+ *
+ * Chức năng: Truyền/nhận dữ liệu qua UART
+ * Hỗ trợ: UART1, UART2, UART3
+ * Baudrate: 9600 - 115200
  */
 
 #ifndef UART_H
@@ -8,14 +12,14 @@
 
 #include <stdint.h>
 
-/* UART peripheral definitions */
+/* ========== Định nghĩa UART ========== */
 typedef enum {
-    UART_PERIPHERAL_1 = 0,
-    UART_PERIPHERAL_2 = 1,
-    UART_PERIPHERAL_3 = 2
+    UART_PERIPHERAL_1 = 0,   /* PA9/PA10 */
+    UART_PERIPHERAL_2 = 1,   /* PA2/PA3 */
+    UART_PERIPHERAL_3 = 2    /* PC10/PC11 */
 } UART_Peripheral_t;
 
-/* UART Baudrate options */
+/* ========== Baudrate ========== */
 typedef enum {
     UART_BAUD_9600   = 9600,
     UART_BAUD_19200  = 19200,
@@ -24,13 +28,13 @@ typedef enum {
     UART_BAUD_115200 = 115200
 } UART_Baudrate_t;
 
-/* UART Data bits */
+/* ========== Data bits ========== */
 typedef enum {
     UART_DATA_BITS_8 = 0,
     UART_DATA_BITS_9 = 1
 } UART_DataBits_t;
 
-/* UART Stop bits */
+/* ========== Stop bits ========== */
 typedef enum {
     UART_STOP_BITS_1   = 0,
     UART_STOP_BITS_0_5 = 1,
@@ -38,53 +42,57 @@ typedef enum {
     UART_STOP_BITS_1_5 = 3
 } UART_StopBits_t;
 
-/* UART Parity */
+/* ========== Parity ========== */
 typedef enum {
     UART_PARITY_NONE = 0,
     UART_PARITY_EVEN = 2,
     UART_PARITY_ODD  = 3
 } UART_Parity_t;
 
+/* ========== Hàm API ========== */
+
 /**
- * @brief Initialize UART peripheral
- * @param uart: UART peripheral (UART1, UART2, UART3)
- * @param baudrate: Baudrate
+ * @brief Khởi tạo UART
+ * @param uart: UART peripheral (UART1/2/3)
+ * @param baudrate: Tốc độ truyền (VD: UART_BAUD_115200)
  */
 void uartInit(UART_Peripheral_t uart, UART_Baudrate_t baudrate);
 
 /**
- * @brief Send single character
+ * @brief Gửi 1 ký tự
  * @param uart: UART peripheral
- * @param ch: Character to send
+ * @param ch: Ký tự cần gửi
  */
 void uartPutChar(UART_Peripheral_t uart, uint8_t ch);
 
 /**
- * @brief Send string
+ * @brief Gửi chuỗi string
  * @param uart: UART peripheral
- * @param str: String to send
+ * @param str: Chuỗi cần gửi (null-terminated)
  */
 void uartPutString(UART_Peripheral_t uart, const char *str);
 
 /**
- * @brief Receive character (blocking)
+ * @brief Nhận 1 ký tự (blocking)
  * @param uart: UART peripheral
- * @return: Received character
+ * @return: Ký tự nhận được
  */
 uint8_t uartGetChar(UART_Peripheral_t uart);
 
 /**
- * @brief Check if data is available
+ * @brief Kiểm tra có dữ liệu đang chờ
  * @param uart: UART peripheral
- * @return: 1 if data available, 0 otherwise
+ * @return: 1 = có dữ liệu, 0 = không
  */
 uint8_t uartAvailable(UART_Peripheral_t uart);
 
 /**
- * @brief Send formatted string (simple printf)
+ * @brief In formatted string (printf-style)
  * @param uart: UART peripheral
  * @param format: Format string
  * @param ...: Arguments
+ *
+ * Hỗ trợ: %d, %u, %x, %c, %s, %%
  */
 void uartPrintf(UART_Peripheral_t uart, const char *format, ...);
 

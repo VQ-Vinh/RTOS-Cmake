@@ -1,6 +1,9 @@
 /**
  * @file air_quality.h
- * @brief Air Quality Sensor Library - Unified interface for MQ2 and DHT11
+ * @brief Air Quality Library - Giao diện thống nhất cho MQ2 và DHT11
+ *
+ * Chức năng: Đọc cảm biến chất lượng không khí
+ * Bao gồm: MQ2 (khí gas), DHT11 (nhiệt độ/độ ẩm)
  */
 
 #ifndef AIR_QUALITY_H
@@ -8,51 +11,57 @@
 
 #include <stdint.h>
 
-/**
- * @brief Combined air quality data structure
- */
-typedef struct {
-    int8_t temperature;     // Temperature in Celsius (DHT11: 0-50°C)
-    int8_t humidity;        // Relative Humidity %RH (DHT11: 20-90%)
-    uint16_t mq2_adc;       // MQ2 ADC value (0-4095 for 12-bit)
-    uint8_t dht11_error;    // DHT11 error flag (0=ok, 1=error)
-} AirQuality_Data_t;
+/* ========== Cấu trúc dữ liệu ========== */
 
 /**
- * @brief Initialize all air quality sensors
- * - MQ2 gas sensor on PB0 (ADC channel 8)
- * - DHT11 temperature & humidity on PA0
+ * @brief Dữ liệu chất lượng không khí
+ */
+typedef struct {
+    int8_t temperature;     /* Nhiệt độ (°C) - DHT11: 0-50°C */
+    int8_t humidity;        /* Độ ẩm (%RH) - DHT11: 20-90% */
+    uint16_t mq2_adc;       /* Giá trị ADC MQ2 (0-4095) */
+    uint8_t dht11_error;    /* Lỗi DHT11: 0=ok, 1=lỗi */
+} AirQuality_Data_t;
+
+/* ========== Hàm API ========== */
+
+/**
+ * @brief Khởi tạo tất cả cảm biến
+ *
+ * Thiết bị:
+ * - MQ2: PB0 (ADC channel 8)
+ * - DHT11: PA0
  */
 void airQualityInit(void);
 
 /**
- * @brief Read all air quality sensors
- * @param data: Pointer to AirQuality_Data_t to store readings
- * @return 0 on success, -1 on DHT11 error
+ * @brief Đọc tất cả cảm biến
+ * @param data: Con trỏ lưu dữ liệu đọc được
+ * @return: 0 = thành công, -1 = lỗi DHT11
  *
- * Reads:
- * - MQ2 gas sensor ADC (12-bit, 0-4095)
- * - DHT11 temperature (°C) and humidity (%RH)
+ * Đọc:
+ * - MQ2 ADC (12-bit, 0-4095)
+ * - DHT11 nhiệt độ (°C) và độ ẩm (%RH)
  */
 int8_t airQualityRead(AirQuality_Data_t *data);
 
 /**
- * @brief Get MQ2 gas sensor raw ADC value
- * @return ADC value (0-4095)
+ * @brief Đọc giá trị ADC thô từ MQ2
+ * @return: Giá trị ADC (0-4095)
  */
 uint16_t airQualityGetMQ2(void);
 
 /**
- * @brief Get DHT11 temperature
- * @param data: Pointer to AirQuality_Data_t from previous read
- * @return Temperature in Celsius
+ * @brief Lấy nhiệt độ từ DHT11
+ * @param data: Con trỏ dữ liệu từ airQualityRead()
+ * @return: Nhiệt độ (°C)
  */
 int8_t airQualityGetTemperature(AirQuality_Data_t *data);
 
 /**
- * @brief Get DHT11 humidity
- * @param data: Pointer to AirQuality_Data_t from previous read
- * @return Humidity %RH
+ * @brief Lấy độ ẩm từ DHT11
+ * @param data: Con trỏ dữ liệu từ airQualityRead()
+ * @return: Độ ẩm (%RH)
  */
 int8_t airQualityGetHumidity(AirQuality_Data_t *data);
 

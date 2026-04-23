@@ -1,3 +1,12 @@
+/**
+ * @file main.c
+ * @brief CustomRTOS Application - STM32F1 Air Quality Monitoring
+ *
+ * Chức năng: Đọc cảm biến chất lượng không khí và gửi lên ESP32
+ * Cảm biến: MQ2 (khí gas), DHT11 (nhiệt độ/độ ẩm)
+ * Chu kỳ: Đọc và gửi mỗi 2 giây
+ */
+
 #include <stdint.h>
 #include "port.h"
 
@@ -14,68 +23,81 @@
 #include "gpio.h"
 #endif
 
+/**
+ * @brief Entry point - được gọi từ startup.c Reset_Handler
+ */
 int main(void) {
-    // Initialize system hardware (clocks, RCC, GPIO)
+    /* ========== Hardware Initialization ========== */
+
+    /* Khởi tạo system clock (72MHz) và GPIO clocks */
     systemInit();
 
-    // Initialize SysTick for 1ms tick
+    /* Khởi tạo SysTick cho ngắt 1ms (dùng cho getSystemTick()) */
     sysTickInit();
 
 #ifdef STM32F1
-    // Configure PC13 as output (LED on STM32F103C8T6)
+    /* Cấu hình LED trên board (PC13 - active LOW) */
     gpioInitPin(GPIO_PORT_C, 13, GPIO_MODE_OUTPUT_50MHZ, GPIO_CNF_PUSHPULL);
-    gpioWritePin(GPIO_PORT_C, 13, 1);  // LED off (active-low)
+    gpioWritePin(GPIO_PORT_C, 13, 1);  /* LED off (1 = OFF với active-low) */
 
-    // Initialize air quality sensors (MQ2 + DHT11)
+    /* Khởi tạo cảm biến: MQ2 (ADC) + DHT11 (1-wire) */
     airQualityInit();
 
-    // Initialize ESP32 connectivity (UART1: PA9=TX, PA10=RX)
+    /* Khởi tạo ESP32 WiFi module (UART1 @ 115200 baud) */
     esp01Init();
 
 #elif defined(STM32F4)
-    // Configure PD12 as output (Green LED on STM32F4 Discovery)
+    /* Cấu hình LED trên STM32F4 Discovery (PD12) */
     gpioInitPinSimple(GPIO_PORT_D, 12, GPIO_MODE_OUTPUT);
-    gpioWritePin(GPIO_PORT_D, 12, 0);  // LED off
-    // Initialize ADC (PA0 - channel 0 for MQ2 gas sensor)
+    gpioWritePin(GPIO_PORT_D, 12, 0);  /* LED off */
+
+    /* Khởi tạo ADC cho MQ2 sensor */
     adcInit();
-    // Initialize ESP32 connectivity (UART1: PA9=TX, PA10=RX)
+
+    /* Khởi tạo ESP32 WiFi module */
     esp01Init();
 #endif
 
-    uint32_t lastSend = 0;
-    AirQuality_Data_t sensorData;
+    /* ========== Main Loop ========== */
+
+    uint32_t lastSend = 0;           /* Thời điểm gửi cuối */
+    AirQuality_Data_t sensorData;    /* Buffer lưu dữ liệu cảm biến */
 
     while (1) {
-        uint32_t now = getSystemTick();
+        uint32_t now = getSystemTick();  /* Lấy thời gian hiện tại (ms) */
 
-        // Read sensors and send every 2000ms (2 seconds)
+        /* Đọc và gửi mỗi 2000ms (2 giây) */
         if (now - lastSend >= 2000) {
             lastSend = now;
 
 #ifdef STM32F1
-            // LED on (active-low: 0 = on)
+            /* Bật LED báo hiệu đang đọc (active-low: 0 = ON) */
             gpioWritePin(GPIO_PORT_C, 13, 0);
 
-            // Read all air quality sensors (MQ2 + DHT11)
+            /* Đọc tất cả cảm biến (MQ2 + DHT11) */
             airQualityRead(&sensorData);
 
-            // Send combined data: [temperature, humidity, mq2_adc]
+            /* Gửi dữ liệu lên ESP32
+             * Format: "[T,H,MQ2]\n" VD: "[25,65,2048]\n"
+             * Nếu DHT11 lỗi, gửi -1 cho T và H */
             if (sensorData.dht11_error == 0) {
                 esp01SendReading(sensorData.temperature, sensorData.humidity, sensorData.mq2_adc);
             } else {
-                // DHT11 error - send with error indicator
                 esp01SendReading(-1, -1, sensorData.mq2_adc);
             }
 
-            // LED off immediately
+            /* Tắt LED */
             gpioWritePin(GPIO_PORT_C, 13, 1);
+
 #elif defined(STM32F4)
-            // LED on (active-high: 1 = on)
+            /* Bật LED (active-high: 1 = ON) */
             gpioWritePin(GPIO_PORT_D, 12, 1);
-            // Read and send
+
+            /* Đọc ADC và gửi lên ESP32 */
             uint16_t adcValue = adcRead();
             esp01SendReading(adcValue);
-            // LED off immediately
+
+            /* Tắt LED */
             gpioWritePin(GPIO_PORT_D, 12, 0);
 #endif
         }

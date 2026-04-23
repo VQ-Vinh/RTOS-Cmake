@@ -1,8 +1,9 @@
 /**
  * @file dht11.c
- * @brief DHT11 Temperature & Humidity Sensor Driver Implementation
- * @note Single-wire communication protocol for DHT11
- * @note Timing-critical: disables interrupts during data read
+ * @brief DHT11 Driver Implementation
+ *
+ * Giao tiếp 1-wire với DHT11
+ * Timing-critical: disable interrupts khi đọc data
  */
 
 #include "dht11.h"
@@ -10,24 +11,16 @@
 #include "../Driver/systick.h"
 #include <stddef.h>
 
-/* DHT11 protocol timing constants */
-#define DHT11_BIT_COUNT       40
-#define DHT11_TIMEOUT_US      100
-#define DHT11_START_LOW_MS    20
-#define DHT11_START_HIGH_US   40
+/* ========== Timing constants ========== */
+#define DHT11_BIT_COUNT       40         /* 40 bits = 5 bytes */
+#define DHT11_TIMEOUT_US      100        /* Timeout per bit (us) */
+#define DHT11_START_LOW_MS    20         /* MCU pull low >= 18ms */
+#define DHT11_START_HIGH_US   40        /* MCU pull high 20-40us */
 
-/* DHT11 threshold for bit recognition (in microseconds) */
-/* HIGH duration > 50us = 1, otherwise 0 */
+/* Threshold để nhận bit: HIGH > 50us = 1 */
 #define DHT11_BIT1_THRESHOLD_US  50
 
-/* Internal function prototypes */
-static void DHT11_SetPinOutput(DHT11_Handle_t *handle);
-static void DHT11_SetPinInput(DHT11_Handle_t *handle);
-static uint8_t DHT11_ReadPin(DHT11_Handle_t *handle);
-static void DHT11_DelayUs(uint32_t us);
-static DHT11_StatusTypeDef DHT11_WaitForState(DHT11_Handle_t *handle, uint8_t state, uint32_t timeout_us);
-
-/* Error messages */
+/* ========== Error messages ========== */
 const char* const DHT11_ErrorMsg[__DHT11_STATUS_TYPEDEF_COUNT__] = {
     [DHT11_OK]               = "OK",
     [DHT11_TIMEOUT]          = "TIMEOUT",
@@ -36,39 +29,40 @@ const char* const DHT11_ErrorMsg[__DHT11_STATUS_TYPEDEF_COUNT__] = {
     [DHT11_INVALID_PARAMETER]= "INVALID PARAMETER"
 };
 
+/* ========== Helper functions ========== */
+
 /**
- * @brief Set pin as output mode
+ * @brief Set pin mode output
  */
 static void DHT11_SetPinOutput(DHT11_Handle_t *handle) {
     gpioInitPin(handle->port, handle->pin, GPIO_MODE_OUTPUT_50MHZ, GPIO_CNF_PUSHPULL);
 }
 
 /**
- * @brief Set pin as input mode (floating)
+ * @brief Set pin mode input (floating)
  */
 static void DHT11_SetPinInput(DHT11_Handle_t *handle) {
     gpioInitPin(handle->port, handle->pin, GPIO_MODE_INPUT, GPIO_CNF_FLOATING);
 }
 
 /**
- * @brief Read current pin state
+ * @brief Đọc trạng thái pin
  */
 static uint8_t DHT11_ReadPin(DHT11_Handle_t *handle) {
     return gpioReadPin(handle->port, handle->pin);
 }
 
 /**
- * @brief Blocking microsecond delay using SysTick
+ * @brief Delay microseconds
  */
 static void DHT11_DelayUs(uint32_t us) {
     systickDelayUs(us);
 }
 
 /**
- * @brief Wait for pin to reach specific state with timeout
- * @param state: 0 = low, 1 = high
- * @param timeout_us: timeout in microseconds
- * @return DHT11 status
+ * @brief Chờ pin đạt trạng thái mong muốn
+ * @param state: 0 = LOW, 1 = HIGH
+ * @param timeout_us: Timeout (microseconds)
  */
 static DHT11_StatusTypeDef DHT11_WaitForState(DHT11_Handle_t *handle, uint8_t state, uint32_t timeout_us) {
     volatile uint32_t start = systickGetValue();
@@ -84,10 +78,16 @@ static DHT11_StatusTypeDef DHT11_WaitForState(DHT11_Handle_t *handle, uint8_t st
     return DHT11_OK;
 }
 
+/* ========== API Implementation ========== */
+
+/**
+ * @brief Khởi tạo DHT11
+ *
+ * - Set pin output, HIGH (idle state)
+ * - Đợi 1 giây cho DHT11 ổn định
+ */
 void DHT11_Init(DHT11_Handle_t *handle, uint8_t port, uint8_t pin) {
-    if (handle == NULL) {
-        return;
-    }
+    if (handle == NULL) return;
 
     handle->port = port;
     handle->pin = pin;
@@ -95,23 +95,26 @@ void DHT11_Init(DHT11_Handle_t *handle, uint8_t port, uint8_t pin) {
     handle->Humidity = 0.0f;
     handle->Status = DHT11_OK;
 
-    /* Set pin as output, high (idle state) */
+    /* Pin output, HIGH (idle) */
     DHT11_SetPinOutput(handle);
     gpioWritePin(handle->port, handle->pin, 1);
 
-    /* Wait for DHT11 to stabilize (~1 second) */
+    /* Đợi DHT11 ổn định (~1 giây) */
     systickDelayMs(1000);
 }
 
+/**
+ * @brief Tắt DHT11 - giải phóng pin
+ */
 void DHT11_DeInit(DHT11_Handle_t *handle) {
-    if (handle == NULL) {
-        return;
-    }
+    if (handle == NULL) return;
 
-    /* Set pin as input floating */
     DHT11_SetPinInput(handle);
 }
 
+/**
+ * @brief Lấy thông báo lỗi
+ */
 const char* DHT11_GetErrorMsg(DHT11_StatusTypeDef status) {
     if (status >= __DHT11_STATUS_TYPEDEF_COUNT__) {
         return DHT11_ErrorMsg[DHT11_INVALID_PARAMETER];
@@ -119,6 +122,17 @@ const char* DHT11_GetErrorMsg(DHT11_StatusTypeDef status) {
     return DHT11_ErrorMsg[status];
 }
 
+/**
+ * @brief Đọc dữ liệu từ DHT11
+ *
+ * Quy trình 1-wire:
+ * 1. MCU gửi START: pull LOW >= 18ms, then HIGH 20-40us
+ * 2. DHT11 response: pull LOW 80us, then HIGH 80us
+ * 3. DHT11 gửi 40 bits data
+ * 4. Verify checksum
+ *
+ * Lưu ý: Disable interrupts trong lúc đọc (timing critical)
+ */
 DHT11_StatusTypeDef DHT11_ReadData(DHT11_Handle_t *handle) {
     uint8_t dht11_data[5] = {0};
     uint8_t bit_index = 0;
@@ -128,24 +142,24 @@ DHT11_StatusTypeDef DHT11_ReadData(DHT11_Handle_t *handle) {
         return DHT11_INVALID_PARAMETER;
     }
 
-    /* Disable interrupts for timing-critical section */
+    /* Disable interrupts cho timing chính xác */
     __asm__("CPSID I");
 
-    /* === Step 1: Send start signal === */
-    /* MCU pulls low for >= 18ms */
+    /* === Bước 1: Gửi START signal === */
+    /* MCU pull LOW >= 18ms */
     DHT11_SetPinOutput(handle);
     gpioWritePin(handle->port, handle->pin, 0);
     systickDelayMs(DHT11_START_LOW_MS);
 
-    /* MCU pulls high for 40us then switch to input */
+    /* MCU pull HIGH 20-40us rồi chuyển sang input */
     gpioWritePin(handle->port, handle->pin, 1);
     DHT11_DelayUs(DHT11_START_HIGH_US);
     DHT11_SetPinInput(handle);
 
-    /* === Step 2: DHT11 response signal === */
-    /* DHT11 pulls low for 80us, then high for 80us */
+    /* === Bước 2: DHT11 response === */
+    /* DHT11 pull LOW 80us, sau đó HIGH 80us */
 
-    /* Wait for DHT11 pulling low (response start) */
+    /* Chờ DHT11 pull LOW */
     status = DHT11_WaitForState(handle, 0, DHT11_TIMEOUT_US * 10);
     if (status != DHT11_OK) {
         __asm__("CPSIE I");
@@ -153,7 +167,7 @@ DHT11_StatusTypeDef DHT11_ReadData(DHT11_Handle_t *handle) {
         return status;
     }
 
-    /* Wait for DHT11 pulling high (response end) */
+    /* Chờ DHT11 pull HIGH */
     status = DHT11_WaitForState(handle, 1, DHT11_TIMEOUT_US * 10);
     if (status != DHT11_OK) {
         __asm__("CPSIE I");
@@ -161,9 +175,9 @@ DHT11_StatusTypeDef DHT11_ReadData(DHT11_Handle_t *handle) {
         return status;
     }
 
-    /* === Step 3: Read 40 bits of data === */
+    /* === Bước 3: Đọc 40 bits === */
     for (bit_index = 0; bit_index < DHT11_BIT_COUNT; bit_index++) {
-        /* Wait for start of bit (low pulse) */
+        /* Chờ start of bit (LOW pulse) */
         status = DHT11_WaitForState(handle, 0, DHT11_TIMEOUT_US * 10);
         if (status != DHT11_OK) {
             __asm__("CPSIE I");
@@ -171,11 +185,11 @@ DHT11_StatusTypeDef DHT11_ReadData(DHT11_Handle_t *handle) {
             return status;
         }
 
-        /* Measure high pulse duration */
+        /* Measure HIGH duration */
         volatile uint32_t start = systickGetValue();
         uint32_t ticks_per_us = SystemCoreClock / 1000000;
 
-        /* Wait for pin to go low */
+        /* Chờ pin xuống LOW */
         while (DHT11_ReadPin(handle) == 1) {
             uint32_t elapsed = start - systickGetValue();
             if (elapsed >= DHT11_TIMEOUT_US * ticks_per_us * 10) {
@@ -183,39 +197,30 @@ DHT11_StatusTypeDef DHT11_ReadData(DHT11_Handle_t *handle) {
             }
         }
 
-        /* Calculate high time in microseconds */
+        /* Tính thời gian HIGH (microseconds) */
         uint32_t high_time_us = (start - systickGetValue()) / ticks_per_us;
 
-        /* Decode bit: if high time > 50us, bit is 1 */
+        /* Decode bit: HIGH > 50us = 1 */
         if (high_time_us > DHT11_BIT1_THRESHOLD_US) {
             dht11_data[bit_index / 8] |= (1 << (7 - (bit_index % 8)));
-        }
-
-        /* Wait for bit to end (pin goes low) with timeout */
-        volatile uint32_t bit_start = systickGetValue();
-        while (DHT11_ReadPin(handle) == 1) {
-            uint32_t elapsed = bit_start - systickGetValue();
-            if (elapsed >= DHT11_TIMEOUT_US * ticks_per_us * 10) {
-                break;
-            }
         }
     }
 
     /* Re-enable interrupts */
     __asm__("CPSIE I");
 
-    /* === Step 4: Verify checksum === */
+    /* === Bước 4: Verify checksum === */
     uint8_t checksum = dht11_data[0] + dht11_data[1] + dht11_data[2] + dht11_data[3];
     if (checksum != dht11_data[4]) {
         handle->Status = DHT11_CHECKSUM_MISMATCH;
         return DHT11_CHECKSUM_MISMATCH;
     }
 
-    /* Update handle with readings */
+    /* Cập nhật handle với readings */
     handle->Humidity = (float)dht11_data[0] + ((float)dht11_data[1] * 0.1f);
     handle->Temperature = (float)dht11_data[2] + ((float)dht11_data[3] * 0.1f);
 
-    /* Return pin to idle state */
+    /* Set pin lại idle state */
     DHT11_SetPinOutput(handle);
     gpioWritePin(handle->port, handle->pin, 1);
 
@@ -223,16 +228,25 @@ DHT11_StatusTypeDef DHT11_ReadData(DHT11_Handle_t *handle) {
     return DHT11_OK;
 }
 
+/**
+ * @brief Đọc nhiệt độ (Celsius)
+ */
 float DHT11_ReadTemperatureC(DHT11_Handle_t *handle) {
     DHT11_ReadData(handle);
     return handle->Temperature;
 }
 
+/**
+ * @brief Đọc nhiệt độ (Fahrenheit)
+ */
 float DHT11_ReadTemperatureF(DHT11_Handle_t *handle) {
     float tempC = DHT11_ReadTemperatureC(handle);
     return (tempC * 1.8f) + 32.0f;
 }
 
+/**
+ * @brief Đọc độ ẩm
+ */
 float DHT11_ReadHumidity(DHT11_Handle_t *handle) {
     DHT11_ReadData(handle);
     return handle->Humidity;

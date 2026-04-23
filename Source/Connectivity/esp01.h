@@ -1,7 +1,9 @@
 /**
  * @file esp01.h
- * @brief ESP32/ESP01 Connectivity via UART
- * Connection: STM32F1 UART1 (PA9-TX, PA10-RX) ↔ ESP32/ESP01 (115200 baud)
+ * @brief ESP32/ESP01 Connectivity - Giao tiếp WiFi module qua UART
+ *
+ * Kết nối: STM32F1 UART1 (PA9-TX, PA10-RX) ↔ ESP32/ESP01
+ * Baudrate: 115200
  */
 
 #ifndef ESP01_H
@@ -10,46 +12,48 @@
 #include <stdint.h>
 #include "../Air_quality/air_quality.h"
 
+/* ========== Hàm API ========== */
+
 /**
- * @brief Initialize ESP32 connectivity (UART1 at 115200 baud)
+ * @brief Khởi tạo ESP32 (UART1, 115200 baud)
  * Pins: PA9 = TX, PA10 = RX
  */
 void esp01Init(void);
 
 /**
- * @brief Send sensor data to ESP32
- * @param temperature: Temperature in Celsius
- * @param humidity: Relative Humidity (%RH)
- * @param mq2_adc: MQ2 ADC reading (0-4095)
+ * @brief Gửi dữ liệu cảm biến lên ESP32
+ * @param temperature: Nhiệt độ (°C)
+ * @param humidity: Độ ẩm (%RH)
+ * @param mq2_adc: Giá trị ADC MQ2 (0-4095)
  *
- * Format sent: "T:xx,H:xx,MQ2:xxxx\n"
- * Example: "T:25,H:65,MQ2:2048\n"
+ * Format gửi: "[T,H,MQ2]\n"
+ * Ví dụ: "[25,65,2048]\n"
  */
 void esp01SendReading(int8_t temperature, int8_t humidity, uint16_t mq2_adc);
 
 /**
- * @brief Send air quality data to ESP32
- * @param data: Pointer to AirQuality_Data_t
+ * @brief Gửi dữ liệu air quality lên ESP32
+ * @param data: Con trỏ AirQuality_Data_t
  *
- * Format sent: "T:xx,H:xx,MQ2:xxxx\n"
- * Example: "T:25,H:65,MQ2:2048\n"
+ * Format gửi: "[T,H,MQ2]\n"
+ * Ví dụ: "[25,65,2048]\n"
  */
 void esp01SendAirQuality(AirQuality_Data_t *data);
 
 /**
- * @brief Send raw MQ2 ADC reading to ESP32
- * @param value: ADC reading from MQ2 (0-4095)
+ * @brief Gửi giá trị MQ2 ADC thô lên ESP32
+ * @param value: Giá trị ADC (0-4095)
  *
- * Format sent: "4095\n"
+ * Format gửi: "4095\n"
  */
 void esp01SendMQ2(uint16_t value);
 
 /**
- * @brief Send custom message to ESP32
- * @param format: printf-style format string
+ * @brief Gửi message tùy chỉnh lên ESP32
+ * @param format: Format string (kiểu printf)
  * @param ...: Arguments
  *
- * Example: esp01Printf("TEMP:%d\n", temperature);
+ * Ví dụ: esp01Printf("TEMP:%d\n", temperature);
  */
 void esp01Printf(const char *format, ...);
 

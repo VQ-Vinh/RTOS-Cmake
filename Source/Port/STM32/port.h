@@ -1,9 +1,9 @@
 /**
  * @file port.h
- * @brief RTOS Port Interface for STM32F1 (ARM Cortex-M3)
+ * @brief Port Layer - Abstraction giữa Kernel và Hardware
  *
- * This file defines the interface between Kernel and Hardware.
- * Kernel calls these functions, Port implementation provides hardware-specific code.
+ * Chức năng: Định nghĩa interface giữa RTOS Kernel và STM32F1 hardware
+ * Kernel gọi các hàm này, Port implementation cung cấp code hardware-specific
  */
 
 #ifndef PORT_H
@@ -11,61 +11,41 @@
 
 #include <stdint.h>
 
-/* =============================================================================
- * System Initialization
- * ============================================================================= */
+/* ========== System Initialization ========== */
 
 /**
- * @brief Initialize system hardware (clocks, GPIO, etc.)
+ * @brief Khởi tạo hardware (clocks, GPIO)
+ *
+ * Gọi SystemClock_Config() và enable GPIO clocks
  */
 void systemInit(void);
 
-/* =============================================================================
- * SysTick Timer
- * ============================================================================= */
+/* ========== SysTick Timer ========== */
 
 /**
- * @brief Initialize SysTick for 1ms tick
+ * @brief Khởi tạo SysTick cho ngắt 1ms
  */
 void sysTickInit(void);
 
 /**
- * @brief Get system tick counter
- * @return Current tick count (milliseconds)
+ * @brief Lấy system tick counter
+ * @return: Số milliseconds đã trôi qua
  */
 uint32_t getSystemTick(void);
 
 /**
- * @brief Blocking delay in milliseconds
- * @param ms: Number of milliseconds to delay
+ * @brief Delay blocking (ms)
+ * @param ms: Số milliseconds cần delay
  */
 void delay_ms(uint32_t ms);
 
+/* ========== LED Control (optional) ========== */
+
 /**
- * @brief LED control callback - called every tick
- *        Implemented in App layer
+ * @brief LED callback - được gọi mỗi tick từ App layer
+ *
+ * Khai báo extern trong file App
  */
 extern void ledControlCallback(void);
-
-/* =============================================================================
- * Context Switching (for Scheduler)
- * ============================================================================= */
-
-/**
- * @brief Trigger context switch from PendSV interrupt
- */
-void triggerPendSV(void);
-
-/**
- * @brief Get current stack pointer
- * @return Current PSP value
- */
-uint32_t getCurrentPSP(void);
-
-/**
- * @brief Set current stack pointer
- * @param psp: New PSP value
- */
-void setCurrentPSP(uint32_t psp);
 
 #endif /* PORT_H */
